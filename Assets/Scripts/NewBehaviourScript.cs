@@ -4,35 +4,38 @@ using UnityEngine;
 using FluentBehaviourTree;
 
 public class NewBehaviourScript : MonoBehaviour {
-    IBehaviourTreeNode tree;
+    public Transform target;
+    public float speed = 10f;
+    private IBehaviourTreeNode tree;
 
-
-	void Start () {
+	private void Start () {
         var builder = new BehaviourTreeBuilder();
+        //if Dist < 0.5 doA else doB
         tree = builder.
-            Selector("mySelector").
-                Do("actionx", t => {
-                    Debug.Log("action x");
-                    return BehaviourTreeStatus.Running;
-                }).
-                Sequence("mySequence").
-                    Do("action1", t =>
-                    {
-                        Debug.Log("Action 1");
-                        return BehaviourTreeStatus.Success;
+            Selector("Find Target").
+                Sequence("At Target").
+                    Condition("At Target", t => {
+                        Debug.Log("Is At Target");
+                        var dist = Vector3.Distance(transform.position, target.position);
+                        return dist < 0.5f;
                     }).
-                    Do("action2", t =>
-                    {
-                        Debug.Log("Action 2");
+                    Do("Idle", t => {
+                        Debug.Log("Idle");
                         return BehaviourTreeStatus.Success;
                     }).
                 End().
+                Do("Go to Target", t =>
+                {
+                    Debug.Log("Go to target");
+                    var dist = Vector3.Distance(transform.position, target.position);
+                    transform.position += (target.position - transform.position).normalized * speed * Time.deltaTime;
+                    return BehaviourTreeStatus.Success;
+                }).
             End().
             Build();
 	}
 	
-
-	void Update () {
+	private void Update () {
         tree.Tick(new TimeData(Time.deltaTime));
 	}
 }
